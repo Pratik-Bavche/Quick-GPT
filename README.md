@@ -1,6 +1,7 @@
 # QuickGPT – AI-Powered Text & Image Generation Platform
 
 QuickGPT is a full-stack AI SaaS platform that allows users to generate text and images using state-of-the-art AI models. The project integrates Stripe for secure payments, a credit-based system for usage, and user authentication with JWT.
+works similar to chatGPT
 
 🚀 Features
 🔑 User Management
