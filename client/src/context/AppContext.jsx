@@ -99,14 +99,34 @@ export const AppContextProvider = ({ children }) => {
     const handleVisibilityChange = () => {
       if (!document.hidden && token && user) {
         // Refresh user data when page becomes visible
+        console.log("🔄 Page became visible, refreshing user data...");
         fetchUser();
       }
     };
 
+    // Also refresh user data when the page loads (for payment returns)
+    const handlePageLoad = () => {
+      if (token && user) {
+        console.log("🔄 Page loaded, refreshing user data...");
+        fetchUser();
+      }
+    };
+
+    // Periodic refresh every 30 seconds to catch any missed credit updates
+    const periodicRefresh = setInterval(() => {
+      if (token && user && !document.hidden) {
+        console.log("🔄 Periodic refresh, checking for credit updates...");
+        fetchUser();
+      }
+    }, 30000); // 30 seconds
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("load", handlePageLoad);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("load", handlePageLoad);
+      clearInterval(periodicRefresh);
     };
   }, [token, user]);
 

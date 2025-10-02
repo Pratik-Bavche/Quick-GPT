@@ -49,6 +49,14 @@ const Credits = () => {
     }
   }, [token]);
 
+  // Additional effect to refresh user data when component mounts (for payment returns)
+  useEffect(() => {
+    if (token) {
+      console.log("🔄 Credits page mounted, refreshing user data...");
+      fetchUser();
+    }
+  }, []);
+
   if (loading) return <Loading />;
 
   return (
