@@ -17,7 +17,10 @@ await connectDB();
 app.post('/api/stripe',express.raw({type:'application/json'}),stripeWebHooks)
 
 //middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? true : true,
+  credentials: true
+}));
 app.use(express.json());
 app.use('/api/chat',chatRouter);
 app.use('/api/message',messageRouter)

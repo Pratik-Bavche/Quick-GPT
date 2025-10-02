@@ -3,7 +3,23 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
+// Set the base URL for API calls
+const getBaseURL = () => {
+  // If VITE_SERVER_URL is defined, use it
+  if (import.meta.env.VITE_SERVER_URL) {
+    return import.meta.env.VITE_SERVER_URL;
+  }
+
+  // For production, use the same domain
+  if (import.meta.env.PROD) {
+    return window.location.origin;
+  }
+
+  // For development, use localhost:3000
+  return "http://localhost:3000";
+};
+
+axios.defaults.baseURL = getBaseURL();
 
 const AppContext = createContext();
 
