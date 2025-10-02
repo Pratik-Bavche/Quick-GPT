@@ -69,11 +69,24 @@ export const getPublishedImages = async (req, res) => {
           "messages.isPublished": true,
         },
       },
+      // Ensure we can reliably join even if Chat.userId was stored as a string
+      {
+        $addFields: {
+          userIdObj: {
+            $cond: [
+              { $eq: [{ $type: "$userId" }, "objectId"] },
+              "$userId",
+              { $convert: { input: "$userId", to: "objectId", onError: null, onNull: null } }
+            ]
+          }
+        }
+      },
+      { $match: { userIdObj: { $ne: null } } },
       {
         $lookup: {
-          from: "users",                // collection name in MongoDB
-          localField: "userId",         // field in Chat
-          foreignField: "_id",          // field in User
+          from: "users",
+          localField: "userIdObj",
+          foreignField: "_id",
           as: "userDetails",
         },
       },
@@ -82,7 +95,7 @@ export const getPublishedImages = async (req, res) => {
         $project: {
           _id: 0,
           imageUrl: "$messages.content",
-          userName: "$userDetails.name",   // take from User
+          userName: "$userDetails.name",
         },
       },
     ]);

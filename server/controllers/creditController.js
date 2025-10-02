@@ -84,3 +84,77 @@ export const purchasePlan=async (req,res) => {
         res.json({success:false,message:error.message})
     }
 }
+
+//API controller to check and update credits manually
+export const checkCredits=async (req,res) => {
+    try {
+        const userId=req.user._id;
+        
+        // Find any unpaid transactions for this user
+        const unpaidTransactions = await Transaction.find({
+            userId: userId,
+            isPaid: false
+        });
+
+        if (unpaidTransactions.length === 0) {
+            return res.json({success: true, message: "No pending transactions", creditsUpdated: false});
+        }
+
+        // Check if any of these transactions have been paid via Stripe
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        let totalCreditsToAdd = 0;
+        let updatedTransactions = [];
+
+        for (const transaction of unpaidTransactions) {
+            try {
+                // Check if the session was completed
+                const sessions = await stripe.checkout.sessions.list({
+                    limit: 100,
+                    created: {
+                        gte: Math.floor((transaction.createdAt.getTime() - 60000) / 1000) // 1 minute before transaction creation
+                    }
+                });
+
+                const completedSession = sessions.data.find(session => 
+                    session.metadata?.transactionId === transaction._id.toString() &&
+                    session.payment_status === 'paid'
+                );
+
+                if (completedSession) {
+                    totalCreditsToAdd += transaction.credits;
+                    transaction.isPaid = true;
+                    updatedTransactions.push(transaction);
+                }
+            } catch (stripeError) {
+                console.error("Error checking Stripe session:", stripeError);
+            }
+        }
+
+        if (totalCreditsToAdd > 0) {
+            // Update user credits
+            const updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $inc: { credits: totalCreditsToAdd } },
+                { new: true }
+            );
+
+            // Save updated transactions
+            await Promise.all(updatedTransactions.map(t => t.save()));
+
+            console.log(`✅ Manual credit update: User ${userId} credited with ${totalCreditsToAdd} credits. New total: ${updatedUser.credits}`);
+            
+            return res.json({
+                success: true, 
+                message: `Credits updated! Added ${totalCreditsToAdd} credits`,
+                creditsUpdated: true,
+                newCredits: updatedUser.credits
+            });
+        }
+
+        res.json({success: true, message: "No completed payments found", creditsUpdated: false});
+
+    } catch (error) {
+        console.error("Error checking credits:", error);
+        res.json({success: false, message: error.message});
+    }
+}
