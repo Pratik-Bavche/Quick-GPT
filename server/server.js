@@ -10,7 +10,14 @@ import { stripeWebHooks } from './controllers/webhooks.js';
 
 const app= express();
 
-await connectDB();
+// Connect to database before starting server
+try {
+    await connectDB();
+    console.log('✓ Server initialization successful');
+} catch (error) {
+    console.error('✗ Failed to start server - Database connection error');
+    process.exit(1);
+}
 
 //stripe webhook
 
