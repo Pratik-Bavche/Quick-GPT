@@ -1,5 +1,4 @@
 # 🚀  QuickGPT is Live – The All-in-One AI Platform for Everyone!
-
 After 3 months of building, debugging, and refining, I’m beyond excited to announce the official launch of QuickGPT — an AI SaaS that makes powerful AI tools simple, affordable, and accessible to all.
 
 # 🤖 WHAT QUICKGPT DOES
